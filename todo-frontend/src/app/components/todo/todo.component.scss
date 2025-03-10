@@ -1,0 +1,156 @@
+
+// define variable
+$primary-color: #0937B2;
+$white: #fff;
+$border-color: #e0e0e0;
+
+main {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    .header {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid $border-color;
+        padding-bottom: 1rem;
+        flex-basis: 10%;
+        .user-info {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            .exit-icon {
+                cursor: pointer;
+            }
+
+        }
+        .profile {
+            border-radius: 49%;
+            min-width: 50px;
+            min-height: 50px;
+            background-color: #0937B2 !important;
+            font-weight: bold;
+            font-size: 1.2rem;
+        } 
+    }
+
+    .content {
+        margin-top: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        flex-basis: 90%;
+        .add-container {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 1.5rem;
+            flex-basis: 10%;
+            .add-btn {
+                border: 1px solid $primary-color;
+                border-radius: .5rem;
+            }
+            .active-text {
+                width: 15rem;
+            }
+        }
+        .todo-header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid $border-color;
+            padding-bottom: .5rem;
+            .header-todo-sub {
+                flex-basis: 40%;
+            }
+            .filters {
+                display: flex;
+                gap: 1rem;
+                align-items: center;
+                .filter-text {
+                    font-size: 0.75rem;
+                }
+                .filter {
+                    display: flex;
+                    flex-direction: column;
+                }
+                .apply-btn {
+                    color: $white !important;
+                    background-color: $primary-color;
+                    margin-left: 1rem;
+                }
+            }
+            .action-buttons {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                .mat-icon {
+                    cursor: pointer;
+                }
+            }
+        }
+        .todo-body {
+            flex-basis: 90%;
+        }
+        .todo-list-container {
+            margin: 0 auto;
+            text-align: center;
+            width: 100%;
+            max-height: 50vh;
+            overflow-y: auto;
+            .priority {
+                text-transform: capitalize;
+            }
+            .todo-item {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-bottom: 1px solid $border-color;
+                &:nth-child(even) {
+                    background: #F5F7FC;
+                }
+                .checkbox {
+                    width: 5%;
+                }
+                .todo-desc-container {
+                    width: 60%;
+                    display: flex;
+                    flex-wrap: wrap;
+                }
+                .priorty-container {
+                    width: 5%;
+                }
+                .action-container {
+                    width: 50%;
+                    text-align: end;
+                }
+
+            }
+        }
+        
+        
+    }
+      
+}
+
+
+::ng-deep {
+    .profile .mdc-button__label {
+        color: $white !important;
+    }
+    .apply-btn .mdc-button__label {
+        color: $white !important;
+    }
+    .btn-success .mdc-button__label {
+        color: $white !important;
+    }
+    .mdc-snackbar .mdc-button__label {
+        color: $white !important;
+    }
+    
+    .mdc-list-item__primary-text {
+        font-size: 0.75rem !important;
+    }
+    .mat-mdc-select-value-text {
+        font-size: 0.75rem !important;
+    }
+}

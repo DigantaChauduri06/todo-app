@@ -1,0 +1,33 @@
+<main>
+    <div class="header-section">
+        <h3 class="header">{{data.type}} Todo</h3>
+        <button mat-icon-button mat-dialog-close>
+            <mat-icon style="color: black;">close</mat-icon>
+          </button>
+    </div>
+    <div class="content">
+        <div class="formValue">
+            <span>Title *</span>
+            <input type="text" class="title" [(ngModel)]="title">
+        </div>
+        <div class="formValue">
+            <span>Select Priority *</span>
+            <mat-form-field class="mat-dropdown">
+                <mat-select [formControl]="priorityControl">
+                @for (priority of priorotyList; track priority) {
+                    <mat-option [value]="priority">{{priority}}</mat-option>
+                }
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <div class="formValue">
+            <span>Description</span>
+            <textarea (input)="handleDescription($event)" id="comment" class="mt-1 comment_input" placeholder="Enter Todo Description Here. You can mention by using @" [(ngModel)]="description" ></textarea>
+            <span class="count">{{count}} / 500</span>
+        </div>  
+        <div class="footer">
+            <button class="btn btn-cancel" mat-button mat-dialog-close>Cancel</button>
+            <button class="btn btn-success" mat-button (click)="handleUpdate()">{{data.type}}</button>
+        </div>
+    </div>
+</main>

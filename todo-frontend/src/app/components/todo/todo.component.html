@@ -1,0 +1,88 @@
+<main>
+    <div class="header">
+        <h1>Todo List</h1>
+        <div class="user-info">
+            <span>Hey {{currentUser}},</span>
+            <button class="profile" matTooltip="Switch to other user" mat-button >{{currentUser[0]}}
+            </button>
+            <mat-icon class="exit-icon" matTooltip="Logout">exit_to_app</mat-icon>
+        </div>
+    </div>
+    <div class="content">
+        <div class="add-container">
+            <mat-slide-toggle color="primary" [(ngModel)]="activeOrInactive"></mat-slide-toggle> 
+            <span class="active-text">Toggle to see {{activeOrInactive ? 'completed' : 'pending'}} tasks</span>
+            <button mat-button class="add-btn" (click)="handleAddUpdateTask('add')">
+                <mat-icon>add</mat-icon>
+                Add Task
+            </button>
+        </div>
+
+        <div class="todo-body">
+            <div class="todo-header-section">
+                <span class="header-todo-sub">Your {{activeOrInactive ? 'pending' : 'completed'}} Tasks {{count}}</span>
+
+                <div class="filters">
+                    <div class="filter">
+                    <span class="filter-text"> Tagged Users </span>
+                    <mat-form-field class="mat-dropdown">
+                        <mat-select [formControl]="users" multiple>
+                          @for (user of userList; track user) {
+                            <mat-option [value]="user">{{user}}</mat-option>
+                          }
+                        </mat-select>
+                    </mat-form-field>
+                    </div>
+                    <div class="filter">
+                    <span class="filter-text"> Priority </span>
+                    <mat-form-field class="mat-dropdown">
+                        <mat-select [formControl]="priority" multiple>
+                          @for (priority of priorotyList; track priority) {
+                            <mat-option [value]="priority">{{priority | uppercase}}</mat-option>
+                          }
+                        </mat-select>
+                    </mat-form-field>
+                    </div>
+                    <button mat-button class="apply-btn">Apply</button>
+                </div>
+                <div class="action-buttons">
+                    <mat-icon matTooltip="Download as csv" (click)="handleDownload()">cloud_download</mat-icon>
+                    @if (activeOrInactive) {
+                        <mat-icon matTooltip="Mark complete">check</mat-icon>
+                    }
+                    <mat-icon matTooltip="Delete">delete_outline</mat-icon>
+                </div>
+            </div>
+            <div class="todo-list-container">
+                @for (todo of todoList; track todo.id) {
+                  <div class="todo-item" [class.completed]="todo.isCompleted">
+                    <div class="checkbox" >
+                        <mat-checkbox color="primary" (change)="handleTodoChange($event, todo)"></mat-checkbox>
+                    </div>
+                    <div class="todo-desc-container">
+                        <span class="todo-desc">{{ todo.desc }}</span>
+                    </div>
+                    <div class="priorty-container">
+                        <span [class]="['priority', todo.priority]" >{{todo.priority}}</span>
+                    </div>
+                    <div class="action-container">
+                        <button mat-icon-button color="primary" (click)="markComplete(todo)">
+                            <mat-icon>check</mat-icon>
+                          </button>
+                        <button mat-icon-button color="primary" (click)="editTodo(todo)">
+                            <mat-icon>edit</mat-icon>
+                          </button>
+                          <button mat-icon-button color="primary" (click)="deleteTodo(todo)">
+                            <mat-icon>delete_outline</mat-icon>
+                          </button>
+                    </div>
+                    
+              
+                  </div>
+                }
+              </div>
+              <mat-paginator [length]="200" [pageSizeOptions]="[10, 50, 100]" aria-label="Select page">
+            </mat-paginator>
+        </div>
+    </div>
+</main>
