@@ -6,7 +6,7 @@
             <span>Hey {{currentUserObj.name}},</span>
             <button (click)="handleSwitchUsers()" class="profile" matTooltip="Switch to other user" mat-button >{{currentUserObj.name[0]}}
             </button>
-            <mat-icon class="exit-icon" matTooltip="Logout" (click)="handleBulkUpdate('delete')">exit_to_app</mat-icon>
+            <mat-icon class="exit-icon" matTooltip="Logout" (click)="handleSwitchUsers()">exit_to_app</mat-icon>
         </div>
     </div>
     <div class="content">
