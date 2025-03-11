@@ -12,8 +12,8 @@ const router = express.Router();
 // ✅ Create a new Todo
 router.post("/", createTodo as RequestHandler);
 
-// ✅ Get all Todos created by a specific user
-router.get("/user/:userId", getTodosByUserId as RequestHandler);
+router.post("/user/:userId", getTodosByUserId as RequestHandler);
+
 
 // ✅ Get a single Todo by ID
 router.get("/:id", getTodoById as RequestHandler);

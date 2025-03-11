@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { v4 as uuidv4 } from "uuid";
 import Todo, { TodoPriorityType } from "../models/Todo";
 import User from "../models/User";
+import mongoose from "mongoose";
 
 export const createTodo = async (req: Request, res: Response) => {
   try {
@@ -48,11 +49,10 @@ export const createTodo = async (req: Request, res: Response) => {
   }
 };
 
-
-// ✅ Get Todos created by a specific user
 export const getTodosByUserId = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
+    let { pageNumber, pageSize, priority, assignedUsers } = req.body;
 
     if (!userId) {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: "User ID is required" });
@@ -60,15 +60,67 @@ export const getTodosByUserId = async (req: Request, res: Response) => {
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(StatusCodes.NOT_FOUND).json({ error: "User not found" });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: "User not found" });
     }
 
-    const todos = await Todo.find({ createdBy: userId }).populate("assignedUsers", "username");
-    res.status(StatusCodes.OK).json(todos);
+    // Pagination Defaults
+    const limit = pageSize || 10;
+    const skip = pageNumber * limit; 
+
+    // Build Filter Query
+    const filter: any = { createdBy: userId };
+
+    if (priority && priority.length > 0) {
+      filter.priority = { $in: priority };
+    }
+
+    if (assignedUsers && Array.isArray(assignedUsers) && assignedUsers.length > 0) {
+      // Convert assignedUsers to valid ObjectIds
+      console.log("Received assignedUsers:", assignedUsers);
+      const validAssignedUsers = assignedUsers
+        .filter((id: string) => mongoose.Types.ObjectId.isValid(id))
+        .map((id: string) => new mongoose.Types.ObjectId(id));
+        console.log("Valid assignedUsers after filtering:", validAssignedUsers);
+    if (validAssignedUsers.length === 0) {
+      return res.status(StatusCodes.OK).json({
+        todos: [],
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: pageNumber,
+      });
+    }
+
+
+      if (validAssignedUsers.length > 0) {
+        filter.assignedUsers = { $in: validAssignedUsers }; // ✅ Correctly filters todos assigned to any of these users
+      }
+    }
+
+    console.log("Final Filter Query:", filter);
+
+    // Fetch Paginated Todos
+    const todos = await Todo.find(filter)
+      .populate("assignedUsers", "username")
+      .skip(skip)
+      .limit(limit);
+
+    // Count total results for frontend pagination
+    const totalCount = await Todo.countDocuments(filter);
+
+    res.status(StatusCodes.OK).json({
+      todos,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: pageNumber,
+    });
   } catch (error) {
+    console.error("Error fetching todos:", error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Error fetching todos" });
   }
 };
+
+
+
 
 // ✅ Get a single Todo by UUID
 export const getTodoById = async (req: Request, res: Response) => {
@@ -77,7 +129,7 @@ export const getTodoById = async (req: Request, res: Response) => {
     const todo = await Todo.findOne({ id: id }).populate("assignedUsers", "username").populate("createdBy", "username");
 
     if (!todo) {
-      return res.status(StatusCodes.NOT_FOUND).json({ error: "Todo not found" });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: "Todo not found" });
     }
 
     res.status(StatusCodes.OK).json(todo);
@@ -110,7 +162,7 @@ export const updateTodo = async (req: Request, res: Response) => {
     ).populate("assignedUsers", "username");
 
     if (!updatedTodo) {
-      return res.status(StatusCodes.NOT_FOUND).json({ error: "Todo not found" });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: "Todo not found" });
     }
 
     res.status(StatusCodes.OK).json({ message: "Todo updated successfully", todo: updatedTodo });
@@ -119,14 +171,13 @@ export const updateTodo = async (req: Request, res: Response) => {
   }
 };
 
-// ✅ Delete a Todo
 export const deleteTodo = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const deletedTodo = await Todo.findOneAndDelete({ id: id });
 
     if (!deletedTodo) {
-      return res.status(StatusCodes.NOT_FOUND).json({ error: "Todo not found" });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: "Todo not found" });
     }
 
     res.status(StatusCodes.OK).json({ message: "Todo deleted successfully" });

@@ -1,9 +1,10 @@
-import { ITodo } from "./TodoModal";
+import { ITodo, TodoPriorityType } from "./TodoModal";
 
 export interface IPaginatedGetTodoAPIRequest {
     pageNumber: number;
     pageSize: number;
-    sortByState: boolean;
+    priority: TodoPriorityType[];
+    assignedUsers: string[]
 }
 
 export interface IPaginatedGetTodoAPIResponse {
