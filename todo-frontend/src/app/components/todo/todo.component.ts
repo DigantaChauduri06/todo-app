@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { SharedModule } from '../../shared/shared.module';
 import { FormControl } from '@angular/forms';
 import { ITodo, TodoPriorityType } from '../../shared/models/TodoModal';
@@ -8,6 +8,8 @@ import { SharedService } from '../../shared/services/shared.service';
 import dayjs from 'dayjs'
 import { MatDialog } from '@angular/material/dialog';
 import { AddUpdateTodoComponent } from '../add-update-todo/add-update-todo.component';
+import { HttpApiService } from '../../shared/services/http-api.service';
+import { ProfileSelectionComponent } from '../profile-selection/profile-selection.component';
 
 @Component({
   selector: 'app-todo',
@@ -16,11 +18,12 @@ import { AddUpdateTodoComponent } from '../add-update-todo/add-update-todo.compo
 templateUrl: './todo.component.html',
   styleUrls: ['./todo.component.scss', '../../../mat-input-custom.scss']
 })
-export class TodoComponent {
-  currentUser: string = 'John Doe';
+export class TodoComponent implements OnInit {
+  currentUserObj: {id: string, name: string} = {id: '', name: ''};
   activeOrInactive: boolean = true;
   count: number = 0;
-  userList: string[] = ['John Doe', 'Jane Doe', 'John Smith', 'Jane Smith'];
+  userList: {id: string, name: string}[] = [];
+  userApiData: any[] = []
   users = new FormControl('');
   priority = new FormControl('');
   priorotyList: TodoPriorityType[] = [
@@ -31,13 +34,44 @@ export class TodoComponent {
 selectedTodos: ITodo[] = []
 
   todoList: ITodo[] = tempTodo;
-  constructor(private _commonSvc: SharedService, private _dialog: MatDialog) {
+  constructor(private _commonSvc: SharedService, private _dialog: MatDialog, private _http: HttpApiService) {
+  }
+  ngOnInit(): void {
+    this.getAllUsers();
   }
   editTodo(todo: ITodo) {
     this.handleAddUpdateTask('update', todo);
   }
   deleteTodo(todo: ITodo) {
     
+  }
+
+  getAllUsers() {
+    this._http.getAllUsers().subscribe((res: any) => {
+      this.userApiData = res;
+      this.userList = res.map((user: any) => {
+        return {
+          name: user.username,
+          id: user._id
+        }
+      });
+      this._dialog.open(ProfileSelectionComponent, {
+        width: '35rem',
+        disableClose: true,
+        data: {
+          users: this.userList
+        }
+      })
+      .afterClosed()
+      .subscribe((userId: any) => {
+        if (userId) {
+          const user = this.userList.find(user => user.id === userId); 
+          if (user) {
+            this.currentUserObj = user;
+          }
+        }
+      });
+    })
   }
   markComplete(todo: ITodo) {
     

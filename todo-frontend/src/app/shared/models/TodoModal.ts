@@ -2,7 +2,7 @@ export enum TodoPriorityType {
     LOW = "low",
     MEDIUM = "medium",
     HIGH = "high"
-  }
+}
   
 export interface ITodo {
     desc: string;

@@ -1,9 +1,10 @@
-<main>
+@if(currentUserObj.name) {
+  <main>
     <div class="header">
         <h1>Todo List</h1>
         <div class="user-info">
-            <span>Hey {{currentUser}},</span>
-            <button class="profile" matTooltip="Switch to other user" mat-button >{{currentUser[0]}}
+            <span>Hey {{currentUserObj.name}},</span>
+            <button class="profile" matTooltip="Switch to other user" mat-button >{{currentUserObj.name[0]}}
             </button>
             <mat-icon class="exit-icon" matTooltip="Logout">exit_to_app</mat-icon>
         </div>
@@ -86,3 +87,4 @@
         </div>
     </div>
 </main>
+}

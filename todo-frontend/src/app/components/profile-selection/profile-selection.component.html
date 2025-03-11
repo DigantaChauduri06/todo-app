@@ -1,0 +1,18 @@
+<main>
+    <h3>User Selection</h3>
+    <div class="profile-selection">
+         <div class="formValue">
+            <span>Select User *</span>
+            <mat-form-field class="mat-dropdown">
+                <mat-select [formControl]="userControl">
+                @for (user of users; track user.id) {
+                    <mat-option [value]="user.id">{{user.name}}</mat-option>
+                }
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <div class="footer">
+            <button class="btn btn-success" mat-button (click)="selectUser()">Select</button>
+        </div>
+    </div>
+</main>

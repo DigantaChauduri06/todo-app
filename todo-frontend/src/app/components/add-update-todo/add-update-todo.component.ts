@@ -33,7 +33,7 @@ export class AddUpdateTodoComponent implements OnInit {
       this.description = this.data.todo.longDesc || "";
       this.priorityControl.setValue(this.data.todo.priority);
       this.count = this.description.length;
-      this.users = this.data.users.map((user: string) => user.toLowerCase());
+      this.users = this.data.users.map((user: any) => user.name.toLowerCase());
     }
   }
   handleDescription(event: any) {

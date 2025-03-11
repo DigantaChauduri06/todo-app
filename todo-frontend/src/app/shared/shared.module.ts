@@ -29,6 +29,8 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatInputModule } from '@angular/material/input';  // Added this
 import {MatPaginatorModule} from '@angular/material/paginator';
+import { HttpClientModule } from '@angular/common/http';
+
 
 @NgModule({
   declarations: [],
@@ -59,6 +61,7 @@ import {MatPaginatorModule} from '@angular/material/paginator';
     MatBadgeModule,
     MatTabsModule,
     MatPaginatorModule,
+    HttpClientModule,
   ],
   exports: [
     CommonModule,
@@ -85,7 +88,8 @@ import {MatPaginatorModule} from '@angular/material/paginator';
     MatProgressSpinnerModule,
     MatBadgeModule,
     MatTabsModule,
-    MatPaginatorModule
+    MatPaginatorModule,
+    HttpClientModule
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: 'en-GB' },

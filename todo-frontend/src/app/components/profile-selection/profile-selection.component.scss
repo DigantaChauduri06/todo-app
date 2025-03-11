@@ -1,0 +1,37 @@
+main {
+    padding: 1.5rem;
+    .profile {
+        border-radius: 49%;
+        min-width: 50px;
+        min-height: 50px;
+        background-color: #0937B2 !important;
+        font-weight: bold;
+        font-size: 1.2rem;
+    } 
+    .formValue {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin: 1.5rem 0;
+      }
+      .footer {
+        display: flex;
+        justify-content: end;
+      }
+      .btn {
+        width: 8.625rem;
+        height: 2.75rem;
+        padding: 0.625rem, 2rem, 0.625rem, 2rem;
+        border-radius: 8px;
+        gap: 8px;
+        background-color: #0937B2;
+        font-family: Lato;
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.5rem;
+        letter-spacing: 0.0313rem;
+        text-align: center;
+        color: #FFFFFF;
+        text-transform: capitalize;
+    }
+}
