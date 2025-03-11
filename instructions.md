@@ -89,7 +89,7 @@ This repository contains the source code for a full-stack Todo List application.
 
 
 
-### User API - GET / CREATE
+## User API - GET / CREATE
 
 1. GET
 ```
