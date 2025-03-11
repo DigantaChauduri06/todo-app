@@ -79,9 +79,28 @@ This repository contains the source code for a full-stack Todo List application.
 - Used Mongoose validation for schema consistency.
 - Used Angular Material for UI consistency.
 - Set up environment variable handling for database connection security.
+- I have created some users in db so that we can proceed with main testing
 
 
 ## Not Implemented
 - Media Query not implemented
 - Authtentication is not implemented
 - Some of the extra feature (for example: bulk complete, bulk delete) frontend is ready backend is not.
+
+
+
+### User API - GET / CREATE
+
+1. GET
+```
+curl --location 'http://localhost:8080/api/users/'
+```
+
+2. CREATE
+```
+curl --location 'http://localhost:8080/api/users/' \
+--header 'Content-Type: application/json' \
+--data '{
+    "username": "Robin"
+}'
+```
