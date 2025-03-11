@@ -3,9 +3,9 @@ import { createUser, getUsers, getUserByUUID, updateUser, deleteUser } from "../
 
 const router = express.Router();
 
-router.post("/", createUser as RequestHandler);  // Create a user
-router.get("/", getUsers as RequestHandler);  // Get all users
-router.put("/:uuid", updateUser as RequestHandler);  // Update user by UUID
-router.delete("/:uuid", deleteUser as RequestHandler);  // Delete user by UUID
+router.post("/", createUser as RequestHandler);  
+router.get("/", getUsers as RequestHandler);  
+router.put("/:uuid", updateUser as RequestHandler);
+router.delete("/:uuid", deleteUser as RequestHandler); 
 
 export default router;

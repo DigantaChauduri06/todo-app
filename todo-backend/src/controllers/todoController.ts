@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { v4 as uuidv4 } from "uuid";
 import Todo, { TodoPriorityType, TodoStatus } from "../models/Todo";
 import User from "../models/User";
 import mongoose from "mongoose";
@@ -33,7 +32,7 @@ export const createTodo = async (req: Request, res: Response) => {
       priority,
       assignedUsers,
       createdBy,
-      status: status || TodoStatus.PENDING, // ✅ Default to "pending" if not provided
+      status: status || TodoStatus.PENDING,
     });
 
     await newTodo.save();
@@ -114,7 +113,6 @@ export const getTodosByUserId = async (req: Request, res: Response) => {
 
 
 
-// ✅ Get a single Todo by UUID
 export const getTodoById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -131,7 +129,6 @@ export const getTodoById = async (req: Request, res: Response) => {
   }
 };
 
-// ✅ Update a Todo
 export const updateTodo = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -154,7 +151,7 @@ export const updateTodo = async (req: Request, res: Response) => {
 
     const updatedTodo = await Todo.findOneAndUpdate(
       { _id: id },
-      { title, description, tags, priority, assignedUsers, status }, // ✅ Include status
+      { title, description, tags, priority, assignedUsers, status }, 
       { new: true }
     ).populate("assignedUsers", "username");
 

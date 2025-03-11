@@ -11,6 +11,7 @@ import { HttpApiService } from '../../shared/services/http-api.service';
 import { ProfileSelectionComponent } from '../profile-selection/profile-selection.component';
 import { PageEvent } from '@angular/material/paginator';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { DEFAULT_DIALOG_WIDTH, DEFAULT_PAGE_SIZE, TOAST_MESSAGES } from '../../shared/constants.constants';
 
 @Component({
   selector: 'app-todo',
@@ -30,7 +31,7 @@ export class TodoComponent implements OnInit {
   priority = new FormControl('');
   isLoadingList: boolean = false;
   pageNo: number = 0;
-  pageSize: number = 10;
+  pageSize: number = DEFAULT_PAGE_SIZE;
   originalTodos: any = [];
   priorotyList: TodoPriorityType[] = [
     TodoPriorityType.LOW,
@@ -52,13 +53,13 @@ selectedTodos: ITodo[] = []
   deleteTodo(todo: ITodo) {
     this.isLoadingList = true;
     this._http.deleteTodo(todo.id as string).subscribe((res: any) => {
-      this._commonSvc.openToast('Task deleted successfully');
+      this._commonSvc.openToast(TOAST_MESSAGES.DELETE_SUCCESS);
       this.isLoadingList = false;
       this.getTodoByUserId();
     }
     , error => {
       this.isLoadingList = false;
-      this._commonSvc.openToast('Error while deleting task');
+      this._commonSvc.openToast(TOAST_MESSAGES.DELETE_ERROR);
     });
   }
   handleSwitch(event: MatSlideToggleChange) {
@@ -66,7 +67,7 @@ selectedTodos: ITodo[] = []
     this.todoAssignAccordingToToggle();
   }
   handleBulkUpdate(type: string) {
-    this._commonSvc.openToast('Feature not implemented, backend API is not ready');
+    this._commonSvc.openToast(TOAST_MESSAGES.BULK_UPDATE_ERROR);
   }
   getTodoByStatus(todoList: any[], status: TodoStatus) {
     return todoList.filter((todo: any) => todo.status === status);
@@ -110,7 +111,7 @@ selectedTodos: ITodo[] = []
       this.isLoadingList = false;
     }, error => {
       this.isLoadingList = false;
-      this._commonSvc.openToast('Error while fetching todos');
+      this._commonSvc.openToast(TOAST_MESSAGES.FETCH_ERROR);
     });
   }
 
@@ -126,7 +127,7 @@ selectedTodos: ITodo[] = []
       completedCount: 0
     }
     this._dialog.open(ProfileSelectionComponent, {
-      width: '35rem',
+      width: DEFAULT_DIALOG_WIDTH,
       disableClose: true,
       data: {
         users: this.userList
@@ -142,7 +143,7 @@ selectedTodos: ITodo[] = []
         this.getTodoByUserId();
       }
     }, error => {
-      this._commonSvc.openToast('Error while fetching todos');
+      this._commonSvc.openToast(TOAST_MESSAGES.FETCH_ERROR);
     });
   }
   getAllUsers() {
@@ -168,19 +169,19 @@ selectedTodos: ITodo[] = []
     }
     this.isLoadingList = true;
     this._http.updateTodo(payload, todo.id as string).subscribe((res: any) => {
-      this._commonSvc.openToast('Task marked completed successfully');
+      this._commonSvc.openToast(TOAST_MESSAGES.MARK_COMPLETE_SUCCESS);
       this.isLoadingList = false;
       this.getTodoByUserId();
     }, error => {
       this.isLoadingList = false;
 
-      this._commonSvc.openToast('Error while marking task completed');
+      this._commonSvc.openToast(TOAST_MESSAGES.MARK_COMPLETE_ERROR);
     });
     
   }
   handleAddUpdateTask(type:'add' |'update', todo: ITodo = {} as ITodo) {
     this._dialog.open(AddUpdateTodoComponent, {
-      width: '35rem',
+      width: DEFAULT_DIALOG_WIDTH,
       data: {
         type,
         todo,
@@ -203,23 +204,23 @@ selectedTodos: ITodo[] = []
           this.isLoadingList = true;
           this._http.updateTodo(payload, todo.id as string).subscribe((res: any) => {
             this.isLoadingList = false;
-            this._commonSvc.openToast('Task updated successfully');
+            this._commonSvc.openToast(TOAST_MESSAGES.UPDATE_SUCCESS);
             this.getTodoByUserId();
           },
         error=> {
           this.isLoadingList = false;
-          this._commonSvc.openToast('Error while updating task');
+          this._commonSvc.openToast(TOAST_MESSAGES.UPDATE_ERROR);
         });
         } 
         else {
             this.isLoadingList = true;
           this._http.addTodo(payload).subscribe((res: any) => {
             this.isLoadingList = false;
-            this._commonSvc.openToast('Task added successfully');
+            this._commonSvc.openToast(TOAST_MESSAGES.ADD_SUCCESS);
             this.getTodoByUserId();
           }, error => {
             this.isLoadingList = false;
-            this._commonSvc.openToast('Error while adding task');
+            this._commonSvc.openToast(TOAST_MESSAGES.ADD_ERROR);
           });
         }
         
@@ -233,7 +234,7 @@ selectedTodos: ITodo[] = []
   }
   handleDownload() {
     if (!this.selectedTodos.length) {
-      this._commonSvc.openToast('No todos selected for download');
+      this._commonSvc.openToast(TOAST_MESSAGES.DOWNLOAD_NO_SELECTION);
       return;
     }
   

@@ -23,7 +23,7 @@ export interface ITodo extends Document {
   assignedUsers: mongoose.Schema.Types.ObjectId[];
   createdBy: mongoose.Schema.Types.ObjectId;
   createdAt: Date;
-  status: TodoStatus; // ✅ New field
+  status: TodoStatus;
 }
 const TodoSchema: Schema = new Schema({
   id: { type: String, default: uuidv4, unique: true },
@@ -33,7 +33,7 @@ const TodoSchema: Schema = new Schema({
   priority: { type: String, enum: Object.values(TodoPriorityType), required: true },
   assignedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
   createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  status: { type: String, enum: ["pending", "completed"], default: "pending" }, // ✅ Add status field
+  status: { type: String, enum: ["pending", "completed"], default: "pending" },
   createdAt: { type: Date, default: Date.now },
 });
 
