@@ -2,6 +2,6 @@
 export const environment = {
     production: false,
     contextEnv: 'local',
-    todoApiUrl: 'http://localhost:8080/api/' // This is the URL of the Todo API
+    todoApiUrl: 'http://localhost:8080/api' // This is the URL of the Todo API
   };
   

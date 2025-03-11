@@ -9,6 +9,11 @@ export enum TodoPriorityType {
 }
 
 // ITodo interface
+export enum TodoStatus {
+  PENDING = "pending",
+  COMPLETED = "completed",
+}
+
 export interface ITodo extends Document {
   id: string;
   title: string;
@@ -16,11 +21,10 @@ export interface ITodo extends Document {
   tags: string[];
   priority: TodoPriorityType;
   assignedUsers: mongoose.Schema.Types.ObjectId[];
-  createdBy: mongoose.Schema.Types.ObjectId; // The user who created the todo
+  createdBy: mongoose.Schema.Types.ObjectId;
   createdAt: Date;
+  status: TodoStatus; // ✅ New field
 }
-
-// Todo Schema
 const TodoSchema: Schema = new Schema({
   id: { type: String, default: uuidv4, unique: true },
   title: { type: String, required: true },
@@ -28,7 +32,8 @@ const TodoSchema: Schema = new Schema({
   tags: { type: [String], default: [] },
   priority: { type: String, enum: Object.values(TodoPriorityType), required: true },
   assignedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
-  createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true }, // Ensure todos are linked to a user
+  createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  status: { type: String, enum: ["pending", "completed"], default: "pending" }, // ✅ Add status field
   createdAt: { type: Date, default: Date.now },
 });
 

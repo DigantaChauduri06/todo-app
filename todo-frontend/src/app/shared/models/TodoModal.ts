@@ -6,11 +6,16 @@ export enum TodoPriorityType {
   
 export interface ITodo {
     desc: string;
-    isCompleted: boolean;
-    id: number | null; // it will be null when it is a new todo
+    id: string | null; // it will be null when it is a new todo
     createdAt: string;
     priority: TodoPriorityType;
     userMentioned: string[];
     isDeleted: boolean;
     longDesc?: string;
+    status: TodoStatus;
+}
+
+export enum TodoStatus {
+    PENDING = "pending",
+    COMPLETED = "completed",
 }

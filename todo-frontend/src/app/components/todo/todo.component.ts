@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { SharedModule } from '../../shared/shared.module';
 import { FormControl } from '@angular/forms';
-import { ITodo, TodoPriorityType } from '../../shared/models/TodoModal';
-import { tempTodo } from './temp';
+import { ITodo, TodoPriorityType, TodoStatus } from '../../shared/models/TodoModal';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { SharedService } from '../../shared/services/shared.service';
 import dayjs from 'dayjs'
@@ -10,6 +9,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { AddUpdateTodoComponent } from '../add-update-todo/add-update-todo.component';
 import { HttpApiService } from '../../shared/services/http-api.service';
 import { ProfileSelectionComponent } from '../profile-selection/profile-selection.component';
+import { PageEvent } from '@angular/material/paginator';
+import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
 @Component({
   selector: 'app-todo',
@@ -21,19 +22,25 @@ templateUrl: './todo.component.html',
 export class TodoComponent implements OnInit {
   currentUserObj: {id: string, name: string} = {id: '', name: ''};
   activeOrInactive: boolean = true;
+  countObj: any = 0;
   count: number = 0;
   userList: {id: string, name: string}[] = [];
   userApiData: any[] = []
   users = new FormControl('');
   priority = new FormControl('');
+  isLoadingList: boolean = false;
+  pageNo: number = 0;
+  pageSize: number = 10;
+  originalTodos: any = [];
   priorotyList: TodoPriorityType[] = [
     TodoPriorityType.LOW,
     TodoPriorityType.MEDIUM,
     TodoPriorityType.HIGH
 ];
+TodoStatus = TodoStatus;
 selectedTodos: ITodo[] = []
 
-  todoList: ITodo[] = tempTodo;
+  todoList: Array<ITodo> = [];
   constructor(private _commonSvc: SharedService, private _dialog: MatDialog, private _http: HttpApiService) {
   }
   ngOnInit(): void {
@@ -43,9 +50,101 @@ selectedTodos: ITodo[] = []
     this.handleAddUpdateTask('update', todo);
   }
   deleteTodo(todo: ITodo) {
-    
+    this.isLoadingList = true;
+    this._http.deleteTodo(todo.id as string).subscribe((res: any) => {
+      this._commonSvc.openToast('Task deleted successfully');
+      this.isLoadingList = false;
+      this.getTodoByUserId();
+    }
+    , error => {
+      this.isLoadingList = false;
+      this._commonSvc.openToast('Error while deleting task');
+    });
+  }
+  handleSwitch(event: MatSlideToggleChange) {
+    this.activeOrInactive = event.checked;
+    this.todoAssignAccordingToToggle();
+  }
+  handleBulkUpdate(type: string) {
+    this._commonSvc.openToast('Feature not implemented, backend API is not ready');
+  }
+  getTodoByStatus(todoList: any[], status: TodoStatus) {
+    return todoList.filter((todo: any) => todo.status === status);
+  }
+  convertApireponseToTodoList(res: any) {
+    return res.todos.map((todo: any) => {
+      return {
+        desc: todo.title,
+        isCompleted: todo.isCompleted,
+        id: todo._id,
+        createdAt: todo.createdAt,
+        priority: todo.priority,
+        userMentioned: todo.assignedUsers,
+        isDeleted: todo.isDeleted,
+        longDesc: todo.description,
+        status: todo.status
+      }
+    })
+  }
+  todoAssignAccordingToToggle() {
+    if (this.activeOrInactive) {
+      const todoList: ITodo[] = this.convertApireponseToTodoList(this.originalTodos);
+      this.todoList = this.getTodoByStatus(todoList, TodoStatus.PENDING);
+      this.count = this.countObj.pendingCount;
+    } else {
+      const todoList: ITodo[] = this.convertApireponseToTodoList(this.originalTodos);
+      this.todoList = this.getTodoByStatus(todoList, TodoStatus.COMPLETED);
+      this.count = this.countObj.completedCount;
+    }
+  }
+  getTodoByUserId() {
+    const payload = this.createPayloadForGettingTodo();
+    this.isLoadingList = true;
+    this._http.getTodos(payload, this.currentUserObj.id).subscribe((res: any) => {
+      this.originalTodos = res;
+      this.countObj = {
+        pendingCount: res.pendingCount,
+        completedCount: res.completedCount
+      };
+      this.todoAssignAccordingToToggle();
+      this.isLoadingList = false;
+    }, error => {
+      this.isLoadingList = false;
+      this._commonSvc.openToast('Error while fetching todos');
+    });
   }
 
+  handleSwitchUsers() {
+    this.currentUserObj = {id: '', name: ''};
+    this.pageNo = 0;
+    this.pageSize = 10;
+    this.todoList = [];
+    this.count = 0;
+    this.selectedTodos = [];
+    this.countObj = {
+      pendingCount: 0,
+      completedCount: 0
+    }
+    this._dialog.open(ProfileSelectionComponent, {
+      width: '35rem',
+      disableClose: true,
+      data: {
+        users: this.userList
+      }
+    })
+    .afterClosed()
+    .subscribe((userId: any) => {
+      if (userId) {
+        const user = this.userList.find(user => user.id === userId); 
+        if (user) {
+          this.currentUserObj = user;
+        }
+        this.getTodoByUserId();
+      }
+    }, error => {
+      this._commonSvc.openToast('Error while fetching todos');
+    });
+  }
   getAllUsers() {
     this._http.getAllUsers().subscribe((res: any) => {
       this.userApiData = res;
@@ -55,25 +154,28 @@ selectedTodos: ITodo[] = []
           id: user._id
         }
       });
-      this._dialog.open(ProfileSelectionComponent, {
-        width: '35rem',
-        disableClose: true,
-        data: {
-          users: this.userList
-        }
-      })
-      .afterClosed()
-      .subscribe((userId: any) => {
-        if (userId) {
-          const user = this.userList.find(user => user.id === userId); 
-          if (user) {
-            this.currentUserObj = user;
-          }
-        }
-      });
+      this.handleSwitchUsers();
     })
   }
   markComplete(todo: ITodo) {
+    const payload = {
+      title: todo.desc, 
+      description: todo.longDesc, 
+      tags: [], //TODO: Tag part UI is pending 
+      priority: todo.priority, 
+      assignedUsers: todo.userMentioned, 
+      status: TodoStatus.COMPLETED
+    }
+    this.isLoadingList = true;
+    this._http.updateTodo(payload, todo.id as string).subscribe((res: any) => {
+      this._commonSvc.openToast('Task marked completed successfully');
+      this.isLoadingList = false;
+      this.getTodoByUserId();
+    }, error => {
+      this.isLoadingList = false;
+
+      this._commonSvc.openToast('Error while marking task completed');
+    });
     
   }
   handleAddUpdateTask(type:'add' |'update', todo: ITodo = {} as ITodo) {
@@ -85,6 +187,49 @@ selectedTodos: ITodo[] = []
         users: this.userList
       }
     })
+    .afterClosed()
+    .subscribe((res: any)=> {
+      if (res) {
+        const payload = {
+          title: res.desc, 
+          description: res.longDesc, 
+          tags: [], //TODO: Tag part UI is pending 
+          priority: res.priority, 
+          assignedUsers: res.mentionedUsers, 
+          status: TodoStatus.PENDING,
+          createdBy: this.currentUserObj.id
+        }
+        if (type === 'update') {
+          this.isLoadingList = true;
+          this._http.updateTodo(payload, todo.id as string).subscribe((res: any) => {
+            this.isLoadingList = false;
+            this._commonSvc.openToast('Task updated successfully');
+            this.getTodoByUserId();
+          },
+        error=> {
+          this.isLoadingList = false;
+          this._commonSvc.openToast('Error while updating task');
+        });
+        } 
+        else {
+            this.isLoadingList = true;
+          this._http.addTodo(payload).subscribe((res: any) => {
+            this.isLoadingList = false;
+            this._commonSvc.openToast('Task added successfully');
+            this.getTodoByUserId();
+          }, error => {
+            this.isLoadingList = false;
+            this._commonSvc.openToast('Error while adding task');
+          });
+        }
+        
+      }
+      
+    })
+  }
+  handleFilterApply() {
+    this.pageNo = 0;
+    this.getTodoByUserId();
   }
   handleDownload() {
     if (!this.selectedTodos.length) {
@@ -116,5 +261,21 @@ selectedTodos: ITodo[] = []
       this.selectedTodos = this.selectedTodos.filter(_todo => todo.id != _todo.id);
     }
   }
+
+  onPageChange(event: PageEvent) {
+    this.pageNo = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.getTodoByUserId();
+
+  }
+
+  createPayloadForGettingTodo() {
+    return {
+      pageNo: this.pageNo,
+      pageSize: this.pageSize,
+      priority: this.priority.value,
+      assignedUsers: this.users.value
+  }
+}
 
 }

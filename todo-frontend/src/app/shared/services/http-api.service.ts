@@ -12,16 +12,20 @@ export class HttpApiService {
 
   constructor(private _http: HttpClient) { }
 
-  getAllTodos(body: IPaginatedGetTodoAPIRequest) : Observable<ITodo[]> {
-    return this._http.post(environment.todoApiUrl +'get-todos', body) as Observable<ITodo[]>;
-  }
-
-  todoCrud(body: ITodo) : Observable<IPostTodoAPIRequest> | Observable<ITodo> {
-    return this._http.post(environment.todoApiUrl +'todos', body) as Observable<ITodo> | Observable<IPostTodoAPIRequest>;
-  }
-
   getAllUsers() : Observable<string[]> {
-    return this._http.get(environment.todoApiUrl +'users') as Observable<string[]>;
+    return this._http.get(environment.todoApiUrl +'/users') as Observable<string[]>;
+  }
+  getTodos(body: any, userId: string) {
+    return this._http.post(`${environment.todoApiUrl}/todos/user/${userId}`, body);
   }
 
+  updateTodo(payload: any, todoId: string) {
+    return this._http.put(`${environment.todoApiUrl}/todos/${todoId}`, payload);
+  }
+  addTodo(payload: any) {
+    return this._http.post(`${environment.todoApiUrl}/todos`, payload);
+  }
+  deleteTodo(todoId: string) {
+    return this._http.delete(`${environment.todoApiUrl}/todos/${todoId}`);
+  }
 }

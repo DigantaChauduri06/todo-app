@@ -1,58 +1,54 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { v4 as uuidv4 } from "uuid";
-import Todo, { TodoPriorityType } from "../models/Todo";
+import Todo, { TodoPriorityType, TodoStatus } from "../models/Todo";
 import User from "../models/User";
 import mongoose from "mongoose";
 
 export const createTodo = async (req: Request, res: Response) => {
   try {
-    const { title, description, tags, priority, assignedUsers, createdBy } = req.body;
+    const { title, description, tags, priority, assignedUsers, createdBy, status } = req.body;
 
-    // Validate required fields
     if (!title || !priority || !createdBy) {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: "Title, priority, and createdBy are required" });
     }
 
-    // Validate priority
     if (!Object.values(TodoPriorityType).includes(priority)) {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid priority value" });
     }
 
-    // Validate creator
+    if (status && !Object.values(TodoStatus).includes(status)) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid status value" });
+    }
+
     const creator = await User.findById(createdBy);
     if (!creator) {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: "User who created the Todo does not exist" });
     }
 
-    // Validate assigned users
-    if (assignedUsers && assignedUsers.length > 0) {
-      const users = await User.find({ _id: { $in: assignedUsers } });
-      const foundUserIds = users.map((user: any) => user._id.toString());
-      const missingUserIds = assignedUsers.filter((userId: any) => !foundUserIds.includes(userId));
+    const newTodo = new Todo({
+      title,
+      description,
+      tags,
+      priority,
+      assignedUsers,
+      createdBy,
+      status: status || TodoStatus.PENDING, // ✅ Default to "pending" if not provided
+    });
 
-      if (missingUserIds.length > 0) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ error: "Some assigned users do not exist", missingUsers: missingUserIds });
-      }
-    }
-
-    // Create new Todo
-    const newTodo = new Todo({ title, description, tags, priority, assignedUsers, createdBy });
     await newTodo.save();
 
-    // Convert document to an object and remove `_id`
-    const responseTodo = newTodo.toObject();
-
-    res.status(StatusCodes.CREATED).json({ message: "Todo created successfully", todo: responseTodo });
+    res.status(StatusCodes.CREATED).json({ message: "Todo created successfully", todo: newTodo });
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Error creating todo" });
   }
 };
 
+
 export const getTodosByUserId = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
-    let { pageNumber, pageSize, priority, assignedUsers } = req.body;
+    let { pageNumber, pageSize, priority, assignedUsers, status } = req.body;
 
     if (!userId) {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: "User ID is required" });
@@ -63,61 +59,57 @@ export const getTodosByUserId = async (req: Request, res: Response) => {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: "User not found" });
     }
 
-    // Pagination Defaults
     const limit = pageSize || 10;
     const skip = pageNumber * limit; 
 
-    // Build Filter Query
     const filter: any = { createdBy: userId };
 
     if (priority && priority.length > 0) {
       filter.priority = { $in: priority };
     }
 
+    if (status && Object.values(TodoStatus).includes(status)) {
+      filter.status = status;
+    }
+
     if (assignedUsers && Array.isArray(assignedUsers) && assignedUsers.length > 0) {
-      // Convert assignedUsers to valid ObjectIds
-      console.log("Received assignedUsers:", assignedUsers);
       const validAssignedUsers = assignedUsers
         .filter((id: string) => mongoose.Types.ObjectId.isValid(id))
         .map((id: string) => new mongoose.Types.ObjectId(id));
-        console.log("Valid assignedUsers after filtering:", validAssignedUsers);
-    if (validAssignedUsers.length === 0) {
-      return res.status(StatusCodes.OK).json({
-        todos: [],
-        totalCount: 0,
-        totalPages: 0,
-        currentPage: pageNumber,
-      });
-    }
 
-
-      if (validAssignedUsers.length > 0) {
-        filter.assignedUsers = { $in: validAssignedUsers }; // ✅ Correctly filters todos assigned to any of these users
+      if (validAssignedUsers.length === 0) {
+        return res.status(StatusCodes.OK).json({ todos: [], totalCount: 0, totalPages: 0, currentPage: pageNumber, pendingCount: 0, completedCount: 0 });
       }
+
+      filter.assignedUsers = { $in: validAssignedUsers };
     }
 
     console.log("Final Filter Query:", filter);
 
-    // Fetch Paginated Todos
+    // Fetch paginated todos
     const todos = await Todo.find(filter)
       .populate("assignedUsers", "username")
       .skip(skip)
       .limit(limit);
 
-    // Count total results for frontend pagination
+    // Count total, pending, and completed todos
     const totalCount = await Todo.countDocuments(filter);
+    const pendingCount = await Todo.countDocuments({ ...filter, status: "pending" });
+    const completedCount = await Todo.countDocuments({ ...filter, status: "completed" });
 
     res.status(StatusCodes.OK).json({
       todos,
       totalCount,
       totalPages: Math.ceil(totalCount / limit),
       currentPage: pageNumber,
+      pendingCount,
+      completedCount,
     });
   } catch (error) {
-    console.error("Error fetching todos:", error);
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Error fetching todos" });
   }
 };
+
 
 
 
@@ -126,7 +118,8 @@ export const getTodosByUserId = async (req: Request, res: Response) => {
 export const getTodoById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const todo = await Todo.findOne({ id: id }).populate("assignedUsers", "username").populate("createdBy", "username");
+    const todo = await Todo.findOne({ id: id }).populate("assignedUsers", "username").populate("createdBy", "username")
+    .sort({ createdAt: -1 }); // Sort in descending order (newest first);
 
     if (!todo) {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: "Todo not found" });
@@ -142,10 +135,14 @@ export const getTodoById = async (req: Request, res: Response) => {
 export const updateTodo = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { title, description, tags, priority, assignedUsers } = req.body;
+    const { title, description, tags, priority, assignedUsers, status } = req.body;
 
     if (priority && !Object.values(TodoPriorityType).includes(priority)) {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid priority value" });
+    }
+
+    if (status && !["pending", "completed"].includes(status)) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: "Invalid status value" });
     }
 
     if (assignedUsers) {
@@ -156,8 +153,8 @@ export const updateTodo = async (req: Request, res: Response) => {
     }
 
     const updatedTodo = await Todo.findOneAndUpdate(
-      { id: id },
-      { title, description, tags, priority, assignedUsers },
+      { _id: id },
+      { title, description, tags, priority, assignedUsers, status }, // ✅ Include status
       { new: true }
     ).populate("assignedUsers", "username");
 
@@ -171,10 +168,11 @@ export const updateTodo = async (req: Request, res: Response) => {
   }
 };
 
+
 export const deleteTodo = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const deletedTodo = await Todo.findOneAndDelete({ id: id });
+    const deletedTodo = await Todo.findOneAndDelete({ _id: id });
 
     if (!deletedTodo) {
       return res.status(StatusCodes.BAD_REQUEST).json({ error: "Todo not found" });

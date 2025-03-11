@@ -33,8 +33,9 @@ export class AddUpdateTodoComponent implements OnInit {
       this.description = this.data.todo.longDesc || "";
       this.priorityControl.setValue(this.data.todo.priority);
       this.count = this.description.length;
-      this.users = this.data.users.map((user: any) => user.name.toLowerCase());
     }
+    this.users = this.data.users.map((user: any) => user.name.toLowerCase());
+
   }
   handleDescription(event: any) {
     this.count = event.target["value"]?.length || 0;
@@ -50,23 +51,26 @@ export class AddUpdateTodoComponent implements OnInit {
     }
   
     // const userList = this.users;
-    const mentionedUsers = this.description.match(/@([A-Za-z]+(?:\s[A-Za-z]+)?)/g)?.map(user => user.substring(1)) || [];
+    let mentionedUsers = this.description.match(/@(\w+)/g)?.map(user => user.substring(1)) || [];
     const notFoundUsers: string[] = [];
     // user must have first name and last name
     mentionedUsers.forEach((user) => {
-      if (!this.users.includes(user)) {
+      if (!this.users.includes(user.toLowerCase())) {
         notFoundUsers.push(user);
       }
     })
-    if (notFoundUsers.length === 0) {
+    
+    // if (notFoundUsers.length === 0) {
+      if (this.data.type === "add" && mentionedUsers.length > 0) {
+        mentionedUsers = mentionedUsers.map(user => {
+          return this.data.users.find((userData: any) => userData.name.toLowerCase() === user.toLowerCase())?.id
+        })
+      }
       this._dialogRef.close({
         desc: this.title,
         mentionedUsers: mentionedUsers,
-        priority: this.priorityControl.value,
+        priority: this.priorityControl.value === "" ? [] : this.priorityControl.value,
         longDesc: this.description
       })
-    } else {
-      this._commonSvc.openToast(`User(s) not found: ${notFoundUsers.join(", ")}`);
-    }
-  }
+    } 
 }
