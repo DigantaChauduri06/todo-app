@@ -80,3 +80,8 @@ This repository contains the source code for a full-stack Todo List application.
 - Used Angular Material for UI consistency.
 - Set up environment variable handling for database connection security.
 
+
+## Not Implemented
+- Media Query not implemented
+- Authtentication is not implemented
+- Some of the extra feature (for example: bulk complete, bulk delete) frontend is ready backend is not.
